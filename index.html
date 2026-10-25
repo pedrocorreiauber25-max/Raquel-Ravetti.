@@ -1,0 +1,184 @@
+
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f7d9e5">
+<title>Raquel Ravetti | Agenda</title>
+<style>
+:root{--pink:#f7d9e5;--dark:#633b50;--rose:#b65d83;--bg:#fff8fb;--white:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--dark);font-family:Arial,sans-serif}
+header{background:linear-gradient(135deg,#f9dce8,#f3bfd4);padding:28px 18px 24px;border-radius:0 0 28px 28px}
+h1{margin:0;font-size:27px}header p{margin:7px 0 0}
+main{max-width:760px;margin:auto;padding:16px}
+.card{background:white;border:1px solid #f2dce6;border-radius:18px;padding:16px;margin:13px 0;box-shadow:0 4px 14px #7a38500a}
+h2{font-size:18px;margin:0 0 14px}
+label{display:block;font-size:13px;margin:10px 0 5px;font-weight:bold}
+input,select,textarea{width:100%;padding:12px;border:1px solid #e8cad8;border-radius:10px;background:#fffafd;color:#633b50;font:inherit}
+button{border:0;border-radius:11px;padding:12px 15px;background:var(--rose);color:white;font-weight:bold;font-size:14px;cursor:pointer}
+button.secondary{background:#f6e4ec;color:#633b50}
+button.delete{background:#fff0f2;color:#a43d61;padding:8px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.task{padding:12px 0;border-bottom:1px solid #f2e4ea}
+.task:last-child{border-bottom:0}
+.task strong{display:block}
+.small{font-size:13px;color:#987285;margin-top:4px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.water{font-size:28px;font-weight:bold}
+footer{text-align:center;font-size:12px;padding:20px;color:#987285}
+@media(max-width:440px){.grid{grid-template-columns:1fr}h1{font-size:24px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🌸 Raquel Ravetti</h1>
+  <p>A tua agenda, ao teu ritmo.</p>
+</header>
+<main>
+  <section class="card">
+    <h2>📅 Hoje</h2>
+    <div id="today"></div>
+    <p class="small">Organiza as tuas marcações, tarefas e lembretes.</p>
+  </section>
+
+  <section class="card">
+    <h2>✨ Nova marcação ou lembrete</h2>
+    <form id="form">
+      <label for="title">O que precisas de fazer?</label>
+      <input id="title" required placeholder="Ex.: manicure, gravar vídeo, consulta">
+      <div class="grid">
+        <div><label for="date">Data</label><input id="date" type="date" required></div>
+        <div><label for="time">Hora</label><input id="time" type="time"></div>
+      </div>
+      <label for="category">Categoria</label>
+      <select id="category">
+        <option>Vida pessoal</option><option>Manicure e beleza</option>
+        <option>Vídeos e conteúdos</option><option>Família e escola</option>
+        <option>Saúde</option><option>Casa</option><option>Outro</option>
+      </select>
+      <label for="repeat">Repetição</label>
+      <select id="repeat">
+        <option value="none">Não repetir</option>
+        <option value="daily">Todos os dias</option>
+        <option value="weekdays">Segunda a sexta</option>
+        <option value="weekly">Todas as semanas</option>
+      </select>
+      <label for="notes">Notas (opcional)</label>
+      <textarea id="notes" rows="2" placeholder="Detalhes importantes..."></textarea>
+      <div class="actions"><button type="submit">Guardar na agenda</button></div>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>🎒 Horários da escola</h2>
+    <p class="small">Podes adicionar os horários à agenda com o botão abaixo.</p>
+    <div class="actions"><button id="school" type="button">Adicionar horários da escola</button></div>
+    <p class="small">Ysis: segunda a sexta, 15h30. Yasmin: segunda a quinta, 17h00; sexta, 17h30.</p>
+  </section>
+
+  <section class="card">
+    <h2>💧 Beber água</h2>
+    <p class="water"><span id="waterCount">0</span> copos</p>
+    <p class="small">Regista os copos que bebes hoje.</p>
+    <div class="actions">
+      <button id="waterAdd" type="button">+ Bebi um copo</button>
+      <button id="waterReset" class="secondary" type="button">Recomeçar o dia</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>🗓️ A minha agenda</h2>
+    <div class="actions">
+      <button id="all" type="button">Todas</button>
+      <button id="todayOnly" class="secondary" type="button">Só hoje</button>
+      <button id="export" class="secondary" type="button">Exportar cópia</button>
+    </div>
+    <div id="tasks"></div>
+  </section>
+
+  <section class="card">
+    <h2>📥 Recuperar uma cópia</h2>
+    <label for="importFile">Escolher ficheiro de cópia JSON</label>
+    <input id="importFile" type="file" accept=".json,application/json">
+    <p class="small">Importar substitui os dados atuais neste dispositivo. Exporta primeiro uma cópia de segurança.</p>
+  </section>
+</main>
+<footer>Raquel Ravetti · Agenda Rosa Elegante 🌸</footer>
+
+<script>
+const $=id=>document.getElementById(id);
+const todayKey=()=>new Date().toLocaleDateString('sv-SE');
+const dateNow=todayKey();
+let tasks=[];
+try{tasks=JSON.parse(localStorage.getItem('raquelRavettiTasks')||'[]')}catch(e){}
+let showToday=false;
+function save(){localStorage.setItem('raquelRavettiTasks',JSON.stringify(tasks));render()}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function localDate(d){return new Date(d+'T12:00:00').toLocaleDateString('pt-PT',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric'})}
+function render(){
+  $('today').textContent=new Date().toLocaleDateString('pt-PT',{weekday:'long',day:'numeric',month:'long'});
+  const list=tasks.filter(t=>!showToday||t.date===todayKey()).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  $('tasks').innerHTML=list.length?list.map(t=>`<div class="task"><strong>${escapeHtml(t.title)}</strong><div class="small">${localDate(t.date)}${t.time?' · '+escapeHtml(t.time):''} · ${escapeHtml(t.category)}${t.repeat&&t.repeat!=='none'?' · 🔁 '+({'daily':'Diariamente','weekdays':'Dias úteis','weekly':'Semanalmente'}[t.repeat]||''):''}</div>${t.notes?`<p>${escapeHtml(t.notes)}</p>`:''}<div class="actions"><button class="secondary" onclick="editTask('${t.id}')">Editar</button><button class="delete" onclick="deleteTask('${t.id}')">Apagar</button></div></div>`).join(''):'<p class="small">Ainda não tens tarefas nesta vista. Adiciona a primeira acima. 🌷</p>';
+  const w=JSON.parse(localStorage.getItem('raquelRavettiWater')||'{}');
+  $('waterCount').textContent=w.date===todayKey()?w.count:0;
+}
+$('form').addEventListener('submit',e=>{
+  e.preventDefault();
+  tasks.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),title:$('title').value.trim(),date:$('date').value,time:$('time').value,category:$('category').value,repeat:$('repeat').value,notes:$('notes').value.trim()});
+  save();e.target.reset();$('date').value=todayKey();
+});
+window.deleteTask=id=>{if(confirm('Queres apagar esta tarefa?')){tasks=tasks.filter(t=>t.id!==id);save()}};
+window.editTask=id=>{
+  const t=tasks.find(x=>x.id===id);if(!t)return;
+  const title=prompt('Nome da tarefa:',t.title);if(title===null)return;
+  const date=prompt('Data (AAAA-MM-DD):',t.date);if(date===null)return;
+  const time=prompt('Hora (HH:MM):',t.time||'');if(time===null)return;
+  if(!title.trim()||!/^\d{4}-\d{2}-\d{2}$/.test(date)){alert('Verifica o nome e a data.');return}
+  Object.assign(t,{title:title.trim(),date,time});save();
+};
+$('all').onclick=()=>{showToday=false;render()};
+$('todayOnly').onclick=()=>{showToday=true;render()};
+$('waterAdd').onclick=()=>{
+  let w=JSON.parse(localStorage.getItem('raquelRavettiWater')||'{}');
+  if(w.date!==todayKey())w={date:todayKey(),count:0};
+  w.count++;localStorage.setItem('raquelRavettiWater',JSON.stringify(w));render();
+};
+$('waterReset').onclick=()=>{localStorage.setItem('raquelRavettiWater',JSON.stringify({date:todayKey(),count:0}));render()};
+$('school').onclick=()=>{
+  const start=new Date();start.setHours(12,0,0,0);
+  const end=new Date(start);end.setDate(end.getDate()+90);
+  let added=0;
+  for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+    const day=d.getDay();if(day===0||day===6)continue;
+    const date=d.toLocaleDateString('sv-SE');
+    const entries=[{title:'Ir buscar a Ysis à escola',time:'15:30',category:'Família e escola'}];
+    if(day>=1&&day<=4)entries.push({title:'Ir buscar a Yasmin à escola',time:'17:00',category:'Família e escola'});
+    if(day===5)entries.push({title:'Ir buscar a Yasmin à escola',time:'17:30',category:'Família e escola'});
+    for(const item of entries){
+      if(!tasks.some(t=>t.date===date&&t.time===item.time&&t.title===item.title)){
+        tasks.push({id:String(Date.now())+Math.random().toString(16).slice(2),...item,date,repeat:'none',notes:'Horário escolar'});
+        added++;
+      }
+    }
+  }
+  save();alert('Foram adicionados '+added+' horários escolares para os próximos 90 dias.');
+};
+$('export').onclick=()=>{
+  const blob=new Blob([JSON.stringify({tasks,water:JSON.parse(localStorage.getItem('raquelRavettiWater')||'{}')},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='raquel-ravetti-copia.json';a.click();URL.revokeObjectURL(a.href);
+};
+$('importFile').addEventListener('change',async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{const data=JSON.parse(await f.text());if(!Array.isArray(data.tasks))throw Error();
+    if(!confirm('Substituir os dados desta agenda pelos dados da cópia?'))return;
+    tasks=data.tasks;localStorage.setItem('raquelRavettiWater',JSON.stringify(data.water||{}));save();alert('Cópia recuperada.');
+  }catch(err){alert('Não foi possível ler essa cópia JSON.')}
+  e.target.value='';
+});
+$('date').value=todayKey();
+render();
+</script>
+</body>
+</html>
