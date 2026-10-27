@@ -37,4 +37,9 @@ const firebaseConfig={apiKey:'AIzaSyCTT1Jdogyz2zoWLPyYJwLGrF5NAxxRKNc',authDomai
 btn.addEventListener('click',async()=>{btn.disabled=true;status.textContent='A verificar as notificações...';try{if(!window.isSecureContext)throw Error('Abre o site através do endereço HTTPS.');if(!('Notification'in window))throw Error('Este navegador não suporta notificações.');if(!('serviceWorker'in navigator))throw Error('Este navegador não suporta o registo de notificações.');let permission=Notification.permission;if(permission==='default')permission=await Notification.requestPermission();if(permission!=='granted'){status.textContent='Permissão do navegador: '+permission+'.';return;}if(!window.firebase)throw Error('A biblioteca Firebase não carregou. Verifica a ligação à Internet.');if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);status.textContent='Permissão concedida. A registar o dispositivo...';const registration=await navigator.serviceWorker.register('./firebase-messaging-sw.js');await navigator.serviceWorker.ready;const messaging=firebase.messaging();const token=await messaging.getToken({vapidKey:'BFViIIUsLLErF9Ds5ngzIiaYEywwCK7RqEM_xSp3rLAukFWIzHd5RNZptuwWnpBbo_Md9_2zCpIwVxNOCDsLKkw,serviceWorkerRegistration:registration});if(!token)throw Error('Firebase não devolveu um token. Verifica a configuração Firebase Cloud Messaging e a chave VAPID.');status.textContent='Dispositivo registado! Ainda é necessário configurar o envio no Firebase para receber lembretes automáticos.';btn.textContent='Dispositivo registado';console.log('Token FCM:',token);}catch(e){console.error(e);status.textContent='Erro: '+(e.message||String(e));}finally{btn.disabled=false;}});
 })();
 </script>
-</body></html>
+<script>
+document.getElementById('enableNotifications').addEventListener('click', function () {
+  document.getElementById('notificationStatus').textContent =
+    'O botão está a funcionar. A verificar a configuração das notificações...';
+});
+</script></body></html>
