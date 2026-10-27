@@ -323,8 +323,8 @@ const firebaseConfig = {
   appId:"1:484822429376:web:1c0e95538955ab5db08725"
 };
 
-const notificationButton = $('enableNotifications');
-const notificationStatus = $('notificationStatus');
+const notificationButton = document.getElementById('enableNotifications');
+const notificationStatus = document.getElementById('notificationStatus');
 
 notificationButton.addEventListener('click', async () => {
   notificationButton.disabled = true;
